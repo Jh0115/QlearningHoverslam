@@ -22,15 +22,19 @@ import numpy as np
 #nueral network design: 5 input neurons, 4 output neurons, and adaptive hidden layers
 
 def sigmoid(x):
-    s = 0.01
-    return 1/(1+math.exp(-s*x))
+    s = 0.4
+    length = len(x)
+    x_sigged = x
+    for ii in range(0,length):
+        x_sigged[ii] = 1/(1+math.exp(-s*x[ii]))
+    return x_sigged
 
 def neuronActivation(vals,w,b):
     #vals is a 1 by n vector of neuron activations
     #w is an n by n matrix of axon weights
     #b is a 1 by n vector of biases
-    s = np.matmul(w,val)+b
-    act = sigmoid(s) #calculate the activation by using sigmoid function
+    s = np.matmul(w,vals)+b
+    act = sigmoid(s) #calculate the activations by using sigmoid function
     return act
     
 
@@ -66,8 +70,18 @@ landingSpeed = 0
 landingDist = 0
 landingPad = False
 
-inputNeuron = np.array([[0],[0],[0],[0],[0]]) #these are the neurons that correspond to the above comment
-print(inputNeuron)
+inputNeurons = np.array([[0],[0],[0],[0],[0]]) #these are the neurons that correspond to the above comment
+w = [] #this is the weights matrix with axon weights
+n = 5
+m = 4
+for ii in range(0,m): #m number of rows (outputs)
+    row = []
+    for jj in range(0,n): #n number of columns (axons and inputs)
+        row.append(0)
+    w.append(row)
+b = np.array([[0],[0],[-50],[50]]) #this is the bias vector for each new neuron
+
+outputNeurons = neuronActivation(inputNeurons,w,b)
 
 #game setup
 framesPerSec = pygame.time.Clock()
@@ -94,6 +108,8 @@ class rocket(pygame.sprite.Sprite):
         global landingSpeed
         global landingDist
         global landingPad
+        global inputNeurons
+        global ouputNeurons
         pressed_keys = pygame.key.get_pressed()
         landingSpeed = math.sqrt(self.vel.x**2+self.vel.y**2)
         landingDist = abs(padX-self.pos.x)
@@ -101,6 +117,14 @@ class rocket(pygame.sprite.Sprite):
             landingPad = True
         else:
             landingPad = False
+
+        #update the inputs to the neural network
+        inputNeurons = np.array([[self.pos.y],[landingDist],[engineState],[self.vel.x],[self.vel.y]])
+
+        #through neural network calculate key presses
+        outputNeurons = neuronActivation(inputNeurons,w,b)
+
+        #given neural network output simulate key presses
 
         #determine y acceleration
         if (pressed_keys[K_UP] or engineState==1) and (engineState==2 or engineState==1):
