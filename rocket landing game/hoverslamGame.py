@@ -15,8 +15,9 @@ pygame.display.set_caption("Hoverslam game")
 
 #physics params
 g = 0.2 #gravitational accel
-accel = -0.5 #engine accel
-t_engine = 2 #seconds of engine fuel
+accel = -0.2 #engine accel
+t_engine = 500 #milliseconds of engine fuel
+startTime = 0
 engineState = 2 #state 2 means engine off, 1 is on, 0 is used
 padW = 30 #landing pad width
 padH = 5 #landing pad height
@@ -50,14 +51,16 @@ class rocket(pygame.sprite.Sprite):
     def move(self): #define rules of movement
         self.acc = vec(0,0)
         global engineState
+        global startTime
         pressed_keys = pygame.key.get_pressed()
 
         #determine y acceleration
-        if pressed_keys[K_UP] and (engineState==2 or engineState==1):
+        if (pressed_keys[K_UP] or engineState==1) and (engineState==2 or engineState==1):
             #if up key is pressed activate the engine for determined time
             self.acc.y = accel
             if engineState==2:
                 engineState = 1
+                startTime = pygame.time.get_ticks()
         else:
             self.acc.y = g #otherwise the vertical acceleration is due to gravity
 
@@ -121,7 +124,7 @@ class pad(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.surf = pygame.Surface((padW,padH))
-        self.surf.fill((255,0,0))
+        self.surf.fill((255,100,100))
         self.rect = self.surf.get_rect(center = ((padX,padY)))
 
 ##--------------------------Initialize objects-------------------
@@ -147,6 +150,11 @@ while True:
     pygame.display.update()
     framesPerSec.tick(FPS)
 
+    print(engineState)
+    if (pygame.time.get_ticks()-startTime)>t_engine and engineState==1:
+        #change engine state to 0
+        engineState = 0
+        
     player.move()
 
 
