@@ -89,18 +89,16 @@ class rocket(pygame.sprite.Sprite):
         #detect ground interaction
         if self.pos.y>=H:
             #we have reached the ground cancel all of our velocity and set our position to the ground
-            self.vel = (0,0)
+            self.vel = vec(0,0)
             self.acc.x = 0
             self.pos.y = H
 
         #detect collision with landing pad
         landing = pygame.sprite.spritecollide(player,bargeGroup,False)
-        
         if landing:
             if self.pos.y<=(landing[0].rect.top+10):
                 self.pos.y = landing[0].rect.top+1
-                self.vel.y = 0
-                self.vel.x = 0
+                self.vel = vec(0,0)
                 self.acc.x = 0
             else:
                 if self.pos.x>padX:
@@ -127,35 +125,58 @@ class pad(pygame.sprite.Sprite):
         self.surf.fill((255,100,100))
         self.rect = self.surf.get_rect(center = ((padX,padY)))
 
-##--------------------------Initialize objects-------------------
-barge = pad() #initialize landing zone
-bargeGroup = pygame.sprite.Group()
-bargeGroup.add(barge)
-
-player = rocket() #initialize player rocket
-
-##-----------------------Game loop-----------------------------
-
 while True:
-    for event in pygame.event.get():
-        if event.type == QUIT: #this closes the game when pressing the exit button
-            pygame.quit()
-            sys.exit()
 
-    displaySurface.fill((100,100,255)) #this draws the background as blue
+    ##--------------------------Initialize objects-------------------
+    #physics params
+    g = 0.2 #gravitational accel
+    accel = -0.2 #engine accel
+    t_engine = 500 #milliseconds of engine fuel
+    startTime = 0
+    engineState = 2 #state 2 means engine off, 1 is on, 0 is used
+    padW = 30 #landing pad width
+    padH = 5 #landing pad height
+    padX = random.randint(padW/2,W-padW/2)
+    padY = H-padH/2
+    velMaxInert = 1 #maximum lateral velocity
+    velMaxLive = 3
 
-    displaySurface.blit(player.surf,player.rect) #update player on screen
-    displaySurface.blit(barge.surf,barge.rect) #draw barge on screen
+    #player info
+    szX = 10
+    szY = 50
 
-    pygame.display.update()
-    framesPerSec.tick(FPS)
+    barge = pad() #initialize landing zone
+    bargeGroup = pygame.sprite.Group()
+    bargeGroup.add(barge)
 
-    print(engineState)
-    if (pygame.time.get_ticks()-startTime)>t_engine and engineState==1:
-        #change engine state to 0
-        engineState = 0
-        
-    player.move()
+    player = rocket() #initialize player rocket
+
+    ##-----------------------Game loop-----------------------------
+
+    restart = False
+    while not restart:
+        for event in pygame.event.get():
+            if event.type == QUIT: #this closes the game when pressing the exit button
+                pygame.quit()
+                sys.exit()
+
+        displaySurface.fill((100,100,255)) #this draws the background as blue
+
+        displaySurface.blit(player.surf,player.rect) #update player on screen
+        displaySurface.blit(barge.surf,barge.rect) #draw barge on screen
+
+        pygame.display.update()
+        framesPerSec.tick(FPS)
+
+        if (pygame.time.get_ticks()-startTime)>t_engine and engineState==1:
+            #change engine state to 0
+            engineState = 0
+            
+        player.move()
+
+        keys = pygame.key.get_pressed()
+        if keys[K_r]:
+            restart = True
 
 
 
