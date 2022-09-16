@@ -17,15 +17,15 @@ pygame.display.set_caption("Hoverslam game")
 g = 0.2 #gravitational accel
 accel = -0.5 #engine accel
 t_engine = 2 #seconds of engine fuel
-global engine_state
-engine_state = 2 #state 2 means engine off, 1 is on, 0 is used
+engineState = 2 #state 2 means engine off, 1 is on, 0 is used
 padW = 30 #landing pad width
-padH = 50 #landing pad height
+padH = 5 #landing pad height
 global padX
 global padY
 padX = random.randint(padW/2,W-padW/2)
 padY = H-padH/2
-velMax = 1 #maximum lateral velocity
+velMaxInert = 1 #maximum lateral velocity
+velMaxLive = 3
 
 #player info
 szX = 10
@@ -49,27 +49,39 @@ class rocket(pygame.sprite.Sprite):
 
     def move(self): #define rules of movement
         self.acc = vec(0,0)
-
+        global engineState
         pressed_keys = pygame.key.get_pressed()
 
         #determine y acceleration
-        if pressed_keys[K_UP] and (engine_state==2 or engine_state==1):
+        if pressed_keys[K_UP] and (engineState==2 or engineState==1):
             #if up key is pressed activate the engine for determined time
             self.acc.y = accel
+            if engineState==2:
+                engineState = 1
         else:
             self.acc.y = g #otherwise the vertical acceleration is due to gravity
 
         #determine lateral movement
-        if pressed_keys[K_LEFT]:
+        if pressed_keys[K_LEFT] and engineState!=1:
             self.acc.x = -0.1
-        elif pressed_keys[K_RIGHT]:
+        elif pressed_keys[K_RIGHT] and engineState!=1:
             self.acc.x = 0.1
+        if pressed_keys[K_LEFT] and engineState==1:
+            self.acc.x = -0.5
+        elif pressed_keys[K_RIGHT] and engineState==1:
+            self.acc.x = 0.5
         
         #limit lateral velocity
-        if self.vel.x<-velMax:
-            self.vel.x = -velMax
-        if self.vel.x>velMax:
-            self.vel.x = velMax
+        if engineState==2:
+            if self.vel.x<-velMaxInert:
+                self.vel.x = -velMaxInert
+            if self.vel.x>velMaxInert:
+                self.vel.x = velMaxInert
+        if engineState!=2:
+            if self.vel.x<-velMaxLive:
+                self.vel.x = -velMaxLive
+            if self.vel.x>velMaxLive:
+                self.vel.x = velMaxLive
 
         #detect ground interaction
         if self.pos.y>=H:
@@ -82,10 +94,20 @@ class rocket(pygame.sprite.Sprite):
         landing = pygame.sprite.spritecollide(player,bargeGroup,False)
         
         if landing:
-            self.pos.y = landing[0].rect.top+1
-            self.vel.y = 0
-            self.vel.x = 0
-            self.acc.x = 0
+            if self.pos.y<=(landing[0].rect.top+10):
+                self.pos.y = landing[0].rect.top+1
+                self.vel.y = 0
+                self.vel.x = 0
+                self.acc.x = 0
+            else:
+                if self.pos.x>padX:
+                    self.pos.x = padX+padW/2+szX/2
+                    self.vel.x = 0
+                    self.acc.x = 0
+                if self.pos.x<padX:
+                    self.pos.x = padX-padW/2-szX/2
+                    self.vel.x = 0
+                    self.acc.x = 0
                 
         
         #update state variables
