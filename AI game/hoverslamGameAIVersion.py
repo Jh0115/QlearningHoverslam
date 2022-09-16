@@ -4,8 +4,9 @@ from pygame.locals import *
 import random
 import sys
 import math
+import numpy as np
 
-#AI will have 4 inputs:
+#AI will have m inputs:
 #   1. move left
 #   2. move right
 #   3. activate engine
@@ -20,6 +21,20 @@ import math
 
 #nueral network design: 5 input neurons, 4 output neurons, and adaptive hidden layers
 
+def sigmoid(x):
+    s = 0.01
+    return 1/(1+math.exp(-s*x))
+
+def neuronActivation(vals,w,b):
+    #vals is a 1 by n vector of neuron activations
+    #w is an n by n matrix of axon weights
+    #b is a 1 by n vector of biases
+    s = np.matmul(w,val)+b
+    act = sigmoid(s) #calculate the activation by using sigmoid function
+    return act
+    
+
+#-------------------------------Start game program------------------------------
 pygame.init() #This begins the pygame instance
 vec = pygame.math.Vector2 #This defines the game as 2D
 
@@ -50,6 +65,9 @@ szY = 50
 landingSpeed = 0
 landingDist = 0
 landingPad = False
+
+inputNeuron = np.array([[0],[0],[0],[0],[0]]) #these are the neurons that correspond to the above comment
+print(inputNeuron)
 
 #game setup
 framesPerSec = pygame.time.Clock()
