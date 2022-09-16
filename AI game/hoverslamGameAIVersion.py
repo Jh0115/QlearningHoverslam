@@ -5,6 +5,21 @@ import random
 import sys
 import math
 
+#AI will have 4 inputs:
+#   1. move left
+#   2. move right
+#   3. activate engine
+#   4. do nothing
+
+#AI will have n states
+#   1. height above ground
+#   2. x displacement from pad
+#   3. current engine state
+#   4. x speed
+#   5. y speed
+
+#nueral network design: 5 input neurons, 4 output neurons, and adaptive hidden layers
+
 pygame.init() #This begins the pygame instance
 vec = pygame.math.Vector2 #This defines the game as 2D
 
