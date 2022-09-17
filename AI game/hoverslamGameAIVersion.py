@@ -26,6 +26,8 @@ def sigmoid(x):
     length = len(x)
     x_sigged = x
     for ii in range(0,length):
+        if x[ii]<-1000:
+            x[ii] = -1000
         x_sigged[ii] = 1/(1+math.exp(-s*x[ii]))
     return x_sigged
 
@@ -81,7 +83,7 @@ for ii in range(0,m): #m number of rows (outputs)
     w.append(row)
 
 # TEMPORARY
-w = [[0,10,0,0,0],[0,-10,0,0,0],[0.25,0,0,0,0],[0,0,0,0,0]]
+w = [[0,5,0,0,0],[0,-5,0,0,0],[0.2,0,0,0,0.5],[0,0,0,0,-0.1]]
 print(w)
 # TEMPORARY
 b = np.array([[0],[0],[-10],[50]]) #this is the bias vector for each new neuron
@@ -119,9 +121,9 @@ class rocket(pygame.sprite.Sprite):
         landingSpeed = math.sqrt(self.vel.x**2+self.vel.y**2)
         landingDist = abs(padX-self.pos.x)
         if self.pos.x<(padX+0.5*padW) and self.pos.x>(padX-0.5*padW):
-            landingPad = True
+            landingPad = 10 #points for keeping score
         else:
-            landingPad = False
+            landingPad = -20 #points for keeping score
 
         #update the inputs to the neural network
         inputNeurons = np.array([[self.pos.y],[(self.pos.x-padX)],[engineState],[self.vel.x],[self.vel.y]])
@@ -261,6 +263,10 @@ while True:
             restart = True
         if gameOverFlag:
             #report final results and call for a restart
+            score = (landingPad)+(10/landingSpeed)+(10/landingDist)
+            if score<0:
+                score = 0
+            print(score)
             restart = True
 
 
