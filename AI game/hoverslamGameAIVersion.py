@@ -20,7 +20,7 @@ import numpy as np
 #   5. y speed
 
 #nueral network design: 5 input neurons, 4 output neurons, and adaptive hidden layers
-
+math.exp(-0.4*-1770)
 def sigmoid(x):
     s = 0.4
     length = len(x)
@@ -79,7 +79,12 @@ for ii in range(0,m): #m number of rows (outputs)
     for jj in range(0,n): #n number of columns (axons and inputs)
         row.append(0)
     w.append(row)
-b = np.array([[0],[0],[-50],[50]]) #this is the bias vector for each new neuron
+
+# TEMPORARY
+w = [[0,10,0,0,0],[0,-10,0,0,0],[0.25,0,0,0,0],[0,0,0,0,0]]
+print(w)
+# TEMPORARY
+b = np.array([[0],[0],[-10],[50]]) #this is the bias vector for each new neuron
 
 outputNeurons = neuronActivation(inputNeurons,w,b)
 
@@ -119,15 +124,29 @@ class rocket(pygame.sprite.Sprite):
             landingPad = False
 
         #update the inputs to the neural network
-        inputNeurons = np.array([[self.pos.y],[landingDist],[engineState],[self.vel.x],[self.vel.y]])
+        inputNeurons = np.array([[self.pos.y],[(self.pos.x-padX)],[engineState],[self.vel.x],[self.vel.y]])
 
         #through neural network calculate key presses
         outputNeurons = neuronActivation(inputNeurons,w,b)
+        #print(outputNeurons)
 
         #given neural network output simulate key presses
+        #adding these extra variables means i can still take control of the game without changing much code
+        upkey = False
+        leftkey = False
+        rightkey = False
+
+        if outputNeurons[0]==max(outputNeurons):
+            leftkey = True
+        elif outputNeurons[1]==max(outputNeurons):
+            rightkey = True
+        elif outputNeurons[2]==max(outputNeurons):
+            upkey = True
+        
+            
 
         #determine y acceleration
-        if (pressed_keys[K_UP] or engineState==1) and (engineState==2 or engineState==1):
+        if ((pressed_keys[K_UP] or upkey) or engineState==1) and (engineState==2 or engineState==1):
             #if up key is pressed activate the engine for determined time
             self.acc.y = accel
             if engineState==2:
@@ -137,13 +156,13 @@ class rocket(pygame.sprite.Sprite):
             self.acc.y = g #otherwise the vertical acceleration is due to gravity
 
         #determine lateral movement
-        if pressed_keys[K_LEFT] and engineState!=1:
+        if (pressed_keys[K_LEFT] or leftkey) and engineState!=1:
             self.acc.x = -0.1
-        elif pressed_keys[K_RIGHT] and engineState!=1:
+        elif (pressed_keys[K_RIGHT] or rightkey) and engineState!=1:
             self.acc.x = 0.1
-        if pressed_keys[K_LEFT] and engineState==1:
+        if (pressed_keys[K_LEFT] or leftkey) and engineState==1:
             self.acc.x = -0.5
-        elif pressed_keys[K_RIGHT] and engineState==1:
+        elif (pressed_keys[K_RIGHT] or rightkey) and engineState==1:
             self.acc.x = 0.5
         
         #limit lateral velocity
@@ -242,9 +261,6 @@ while True:
             restart = True
         if gameOverFlag:
             #report final results and call for a restart
-            print(landingSpeed)
-            print(landingDist)
-            print(landingPad)
             restart = True
 
 
