@@ -15,7 +15,7 @@ import numpy as np
 #AI will have n states
 #   1. height above ground
 #   2. x displacement from pad
-#   3. current engine state
+#   3. engine availability
 #   4. x speed
 #   5. y speed
 
@@ -56,11 +56,10 @@ accel = -0.2 #engine accel
 t_engine = 1000 #milliseconds of engine fuel
 startTime = 0
 engineState = 2 #state 2 means engine off, 1 is on, 0 is used
-padW = 30 #landing pad width
-padH = 5 #landing pad height
+padW = 60 #landing pad width
+padH = 10 #landing pad height
 global padX
 global padY
-padX = random.randint(padW/2,W-padW/2)
 padY = H-padH/2
 velMaxInert = 1 #maximum lateral velocity
 velMaxLive = 3
@@ -83,10 +82,13 @@ for ii in range(0,m): #m number of rows (outputs)
     w.append(row)
 
 # TEMPORARY
-w = [[0,5,0,0,0],[0,-5,0,0,0],[0.2,0,0,0,0.5],[0,0,0,0,-0.1]]
-print(w)
+w = [[0,1,0,0.1,0],
+     [0,-1,0,0.1,0],
+     [0.1,-0.2,1,-0.1,1],
+     [-0.1,0,0,0,-0.2]]
 # TEMPORARY
-b = np.array([[0],[0],[-10],[50]]) #this is the bias vector for each new neuron
+
+b = np.array([[5],[5],[-10],[90]]) #this is the bias vector for each new neuron
 
 outputNeurons = neuronActivation(inputNeurons,w,b)
 
@@ -123,10 +125,15 @@ class rocket(pygame.sprite.Sprite):
         if self.pos.x<(padX+0.5*padW) and self.pos.x>(padX-0.5*padW):
             landingPad = 10 #points for keeping score
         else:
-            landingPad = -20 #points for keeping score
+            landingPad = 0 #points for keeping score
 
         #update the inputs to the neural network
-        inputNeurons = np.array([[self.pos.y],[(self.pos.x-padX)],[engineState],[self.vel.x],[self.vel.y]])
+        if engineState==2:
+            engineInfo = 1
+        else:
+            engineInfo = -50
+            
+        inputNeurons = np.array([[self.pos.y],[(self.pos.x-padX)],[engineInfo],[self.vel.x],[self.vel.y]])
 
         #through neural network calculate key presses
         outputNeurons = neuronActivation(inputNeurons,w,b)
@@ -144,7 +151,9 @@ class rocket(pygame.sprite.Sprite):
             rightkey = True
         elif outputNeurons[2]==max(outputNeurons):
             upkey = True
-        
+
+        #if engineState<2:
+            #print(outputNeurons)
             
 
         #determine y acceleration
@@ -186,6 +195,11 @@ class rocket(pygame.sprite.Sprite):
             self.acc.x = 0
             self.pos.y = H
             gameOverFlag = True
+        elif self.pos.y<0:
+            gameOverFlag = True
+            landingPad = 0
+            landingSpeed = 9999
+            landingDist = 9999
 
         #detect collision with landing pad
         landing = pygame.sprite.spritecollide(player,bargeGroup,False)
@@ -226,7 +240,7 @@ while True:
     #physics params
     startTime = 0
     engineState = 2 #state 2 means engine off, 1 is on, 0 is used
-    padX = random.randint(padW/2,W-padW/2)
+    padX = random.randint(W/2-150,W/2+150)
     gameOverFlag = False
 
     barge = pad() #initialize landing zone
@@ -263,7 +277,11 @@ while True:
             restart = True
         if gameOverFlag:
             #report final results and call for a restart
-            score = (landingPad)+(10/landingSpeed)+(10/landingDist)
+            if landingDist<0.1:
+                landingDist = 0.1
+            if landingSpeed<0.01:
+                landingSpeed = 0.01
+            score = (landingPad)+(100/landingSpeed)+(10/landingDist)
             if score<0:
                 score = 0
             print(score)
