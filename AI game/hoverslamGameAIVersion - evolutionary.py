@@ -5,6 +5,7 @@ import random
 import sys
 import math
 import numpy as np
+import heapq
 
 #AI will have m inputs:
 #   1. move left
@@ -97,7 +98,7 @@ outputNeurons = neuronActivation(inputNeurons,w,b)
 framesPerSec = pygame.time.Clock()
 displaySurface = pygame.display.set_mode((W,H))
 gameOverFlag = False
-batchNum = 50 #how many games to play for each generation
+batchNum = 10 #how many games to play for each generation
 
 ##--------------------------Classes-----------------------------
 class rocket(pygame.sprite.Sprite):
@@ -243,14 +244,14 @@ bBatch = []
 sBatch = []
 intervalW = []
 
-kk = 1000 #this is the original interval of random values for all weights and biases
+origInt = 1000 #this is the original interval of random values for all weights and biases
 for ii in range(0,m): #m number of rows (outputs)
     row = []
     for jj in range(0,n): #n number of columns (axons and inputs)
-        row.append(kk)
+        row.append(origInt)
     intervalW.append(row)
 
-intervalB = np.array([[kk],[kk],[kk],[kk]])
+intervalB = np.array([[origInt],[origInt],[origInt],[origInt]])
 
 wBestPrev = w
 bBestPrev = b
@@ -336,10 +337,51 @@ while True:
         randVal4 = random.uniform((bBestPrev[3,0]-intervalB[3,0]),(bBestPrev[3,0]+intervalB[3,0]))
         b = []
         b = np.array([[randVal1],[randVal2],[randVal3],[randVal4]])
-
-        print(b)
         
-    ## if this batch is done, evolve based on best performers
+    elif l>=batchNum:    
+        ## if this batch is done, evolve based on best performers.
+        ## we will shrink the interval of randomness in accordance
+        ## with the variance between the top players.
+
+        ## Then we will assume the "best previous player" was a weighted average of the
+        ## top players weighted by score
+
+        ## step 1: determine top 10 players
+        nn = 3
+        sTT = heapq.nlargest(nn,sBatch)
+        indexTT = []
+        
+        for ii in range(0,nn):
+            indexTT.append(sBatch.index(sTT[ii]))
+
+        wTT = []
+        for ii in range(0,nn):
+            wTT.append(wBatch[:][:][indexTT[ii]])
+
+        bTT = []
+        for ii in range(0,nn):
+            bTT.append(bBatch[:][indexTT[ii]])
+
+        ## step 2: calculate variance values
+
+        ## step 3: calculate "best previous player" using weighted average
+        wWeighted = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
+        bWeighted = [[0],[0],[0],[0]]
+        
+        for ii in range(0,m):
+            for jj in range(0,n):
+                for kk in range(0,nn):
+                    wWeighted[ii][jj] += (wTT[kk][ii][jj])*sTT[kk]
+                    
+        for ii in range(0,m):
+            for jj in range(0,nn):
+                bWeighted[ii][0] += bTT[jj][ii]*sTT[jj]
+
+        ## step 4: reset for next batch
+        l = 0
+        wBatch = []
+        bBatch = []
+        sBatch = []
 
 
 
