@@ -98,7 +98,7 @@ outputNeurons = neuronActivation(inputNeurons,w,b)
 framesPerSec = pygame.time.Clock()
 displaySurface = pygame.display.set_mode((W,H))
 gameOverFlag = False
-batchNum = 10 #how many games to play for each generation
+batchNum = 100 #how many games to play for each generation
 
 ##--------------------------Classes-----------------------------
 class rocket(pygame.sprite.Sprite):
@@ -255,6 +255,7 @@ intervalB = np.array([[origInt],[origInt],[origInt],[origInt]])
 
 wBestPrev = w
 bBestPrev = b
+gNum = 1
 
 while True:
 
@@ -307,7 +308,6 @@ while True:
             score = (landingPad)+(100/landingSpeed)+(10/landingDist)
             if score<0:
                 score = 0
-            print(score)
             restart = True
 
     ##------------------------Neural network evolution--------------------------------
@@ -347,7 +347,7 @@ while True:
         ## top players weighted by score
 
         ## step 1: determine top 10 players
-        nn = 3
+        nn = 10
         sTT = heapq.nlargest(nn,sBatch)
         indexTT = []
         
@@ -363,12 +363,34 @@ while True:
             bTT.append(bBatch[:][indexTT[ii]])
 
         ## step 2: calculate variance values and update randomness intervals
-        
+        wAvg = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
+        wVar = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
+        for ii in range(0,m):
+            for jj in range(0,n):
+                for kk in range(0,nn):
+                    wAvg[ii][jj] += wTT[kk][ii][jj]
+                wAvg[ii][jj] = wAvg[ii][jj]/nn
+                
+        for ii in range(0,m):
+            for jj in range(0,n):
+                for kk in range(0,nn):
+                    wVar[ii][jj] += ((wTT[kk][ii][jj]-wAvg[ii][jj])**2)/(nn-1)
+                ## at most we lower the interval by p percent as dictated by the following equation
+                intervalW[ii][jj] = intervalW[ii][jj]-((1000000-wVar[ii][jj])/1000000)*origInt
+
+        bAvg = [[0],[0],[0],[0]]
+        bVar = [[0],[0],[0],[0]]
+        for ii in range(0,m):
+            for jj in range(0,nn):
+                bAvg[ii][0] += bTT[jj][ii]
+            bAvg[ii][0] = bAvg[ii][0]/nn
+            
+        for ii in range(0,m):
+            for jj in range(0,nn):
+                bVar[ii][0] += ((bTT[jj][ii]-bAvg[ii][0])**2)/(nn-1)
+            intervalB[ii][0] = intervalB[ii][0]-((1000000-bVar[ii][0])/1000000)*origInt
 
         ## step 3: calculate "best previous player" using weighted average
-        #wWeighted = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
-        #bWeighted = [[0],[0],[0],[0]]
-        
         for ii in range(0,m):
             for jj in range(0,n):
                 wWeighted = 0
@@ -391,6 +413,9 @@ while True:
         wBatch = []
         bBatch = []
         sBatch = []
+        gNum += 1
+        print(str(gNum)+","+str(sTT[0]))
+        
 
 
 
