@@ -362,20 +362,29 @@ while True:
         for ii in range(0,nn):
             bTT.append(bBatch[:][indexTT[ii]])
 
-        ## step 2: calculate variance values
+        ## step 2: calculate variance values and update randomness intervals
+        
 
         ## step 3: calculate "best previous player" using weighted average
-        wWeighted = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
-        bWeighted = [[0],[0],[0],[0]]
+        #wWeighted = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
+        #bWeighted = [[0],[0],[0],[0]]
         
         for ii in range(0,m):
             for jj in range(0,n):
+                wWeighted = 0
+                s_sum = 0
                 for kk in range(0,nn):
-                    wWeighted[ii][jj] += (wTT[kk][ii][jj])*sTT[kk]
+                    wWeighted += (wTT[kk][ii][jj])*sTT[kk]
+                    s_sum += sTT[kk]
+                wBestPrev[ii][jj] = wWeighted/s_sum
                     
         for ii in range(0,m):
+            bWeighted = 0
+            s_sum = 0
             for jj in range(0,nn):
-                bWeighted[ii][0] += bTT[jj][ii]*sTT[jj]
+                bWeighted += bTT[jj][ii]*sTT[jj]
+                s_sum += sTT[jj]
+            bBestPrev[ii][0] = bWeighted/s_sum
 
         ## step 4: reset for next batch
         l = 0
