@@ -31,11 +31,11 @@ def sigmoid(x):
         x_sigged[ii] = 1/(1+math.exp(-s*x[ii]))
     return x_sigged
 
-def neuronActivation(vals,w,b):
+def neuronActivation(vals,ww,bb):
     #vals is a 1 by n vector of neuron activations
     #w is an n by n matrix of axon weights
     #b is a 1 by n vector of biases
-    s = np.matmul(w,vals)+b
+    s = np.matmul(ww,vals)+bb
     act = sigmoid(s) #calculate the activations by using sigmoid function
     return act
     
@@ -134,9 +134,10 @@ class rocket(pygame.sprite.Sprite):
             engineInfo = 1
         else:
             engineInfo = -50
-            
-        inputNeurons = np.array([[self.pos.y],[(self.pos.x-padX)],[engineInfo],[self.vel.x],[self.vel.y]])
 
+        inputNeurons = []
+        inputNeurons = np.array([[self.pos.y],[(self.pos.x-padX)],[engineInfo],[self.vel.x],[self.vel.y]])
+        
         #through neural network calculate key presses
         outputNeurons = neuronActivation(inputNeurons,w,b)
         #print(outputNeurons)
@@ -313,29 +314,30 @@ while True:
 
     ## if we are not done with this batch, save the score and network params
     if l<batchNum:
-        print("test")
-
         #save the w matrix, b vector, and score
         wBatch.append(w)
         bBatch.append(b)
         sBatch.append(score)
 
         #randomize the next player with values based on previous generation variance
+        w = []
         for ii in range(0,m): #m number of rows (outputs)
             row = []
             for jj in range(0,n): #n number of columns (axons and inputs)
-                print(type(jj))
-                wLow = wBestPrev[ii,jj]-intervalW[ii,jj]
-                wHigh = wBestPrev[ii,jj]+intervalW[ii,jj]
-                randVal = random.rand(wLow,wHigh)
+                wLow = wBestPrev[ii][jj]-intervalW[ii][jj]
+                wHigh = wBestPrev[ii][jj]+intervalW[ii][jj]
+                randVal = random.uniform(wLow,wHigh)
                 row.append(randVal)
             w.append(row)
 
-        randVal1 = random.rand((bBestPrev[0]-intervalB[0]),(bBestPrev[0]+intervalB[0]))
-        randVal2 = random.rand((bBestPrev[1]-intervalB[1]),(bBestPrev[1]+intervalB[1]))
-        randVal3 = random.rand((bBestPrev[2]-intervalB[2]),(bBestPrev[2]+intervalB[2]))
-        randVal4 = random.rand((bBestPrev[3]-intervalB[3]),(bBestPrev[3]+intervalB[3]))
+        randVal1 = random.uniform((bBestPrev[0,0]-intervalB[0,0]),(bBestPrev[0,0]+intervalB[0,0]))
+        randVal2 = random.uniform((bBestPrev[1,0]-intervalB[1,0]),(bBestPrev[1,0]+intervalB[1,0]))
+        randVal3 = random.uniform((bBestPrev[2,0]-intervalB[2,0]),(bBestPrev[2,0]+intervalB[2,0]))
+        randVal4 = random.uniform((bBestPrev[3,0]-intervalB[3,0]),(bBestPrev[3,0]+intervalB[3,0]))
+        b = []
         b = np.array([[randVal1],[randVal2],[randVal3],[randVal4]])
+
+        print(b)
         
     ## if this batch is done, evolve based on best performers
 
