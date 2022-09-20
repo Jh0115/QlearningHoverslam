@@ -414,7 +414,7 @@ while True:
         bBatch = []
         sBatch = []
         gNum += 1
-        print(str(gNum)+","+str(sTT[0]))
+        print(str(gNum)+"   "+str(sTT[0])+"   "+str(bBestPrev[0][0]))
         
 
 
